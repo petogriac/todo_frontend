@@ -14,7 +14,7 @@
                                 absolute
                                 bottom
                                 right
-                                @click.native.stop="dialog = !dialog"
+                                @click.native.stop="dialogActions()"
                               >
                                 <v-icon>add</v-icon>
                               </v-btn>
@@ -23,7 +23,7 @@
                         <!--Listing all todos-->
                             <v-list subheader>
                             <v-subheader>TODO items</v-subheader>
-                                <v-list-tile avatar v-for="todo in todos">
+                                <v-list-tile avatar v-for="todo in todos" :key="todo._id">
                                   <v-list-tile-avatar>
                                     <i class="material-icons">work</i>
                                   </v-list-tile-avatar>
@@ -35,9 +35,9 @@
                                   </v-list-tile-content>
                                   <v-list-tile-action>
                                       <span>
-                                          <v-btn v-if="todo.done == 'true'" @click="undoTask(todo)" icon class="material-icons my-green">undo</v-btn>
-                                          <v-btn v-if="todo.done == 'false'" @click="doneTask(todo)" icon class="material-icons my-green">done</v-btn>
-                                          <v-btn @click="editTask(todo)" icon class="material-icons my-orange">mode_edit</v-btn>
+                                          <v-btn v-if="todo.done" @click="undoTask(todo)" icon class="material-icons my-green">undo</v-btn>
+                                          <v-btn v-if="!todo.done" @click="doneTask(todo)" icon class="material-icons my-green">done</v-btn>
+                                          <v-btn @click.stop="editTask(todo)" icon class="material-icons my-orange">mode_edit</v-btn>
                                           <v-btn @click="deleteTask(todo)" icon class="material-icons my-red">delete</v-btn>
                                       </span>
                                   </v-list-tile-action>
@@ -47,14 +47,27 @@
                             <v-dialog v-model="dialog">
                           <v-card>
                            <v-card-text>
-                              <v-text-field label="Add a task"></v-text-field>
-                              <small class="grey--text">* This doesn't actually save.</small>
+                               <v-text-field ref="inputTodo" v-model="addedTask" label="Add a task" @keyup.13="addTask(addedTask)"></v-text-field>
+                              <small class="grey--text">* This will be saved to DB as well.</small>
                            </v-card-text>
                            <v-card-actions>
                              <v-spacer></v-spacer>
-                             <v-btn flat primary @click.native="dialog = false">Submit</v-btn>
+                             <v-btn flat primary @click.native="addTask(addedTask)">Submit</v-btn>
                            </v-card-actions>
                           </v-card>
+                        </v-dialog>
+                        <!--Edit Dialog part-->
+                            <v-dialog v-model="editDialog">
+                              <v-card>
+                               <v-card-text>
+                                   <v-text-field v-model="editedTask.todo" autofocus="" label="Edit task" @keyup.13="updateTask(editedTask)"></v-text-field>
+                                  <small class="grey--text">* This will be saved to DB as well.</small>
+                               </v-card-text>
+                               <v-card-actions>
+                                 <v-spacer></v-spacer>
+                                 <v-btn flat primary @click.native="updateTask(editedTask)">Submit</v-btn>
+                               </v-card-actions>
+                              </v-card>
                         </v-dialog>
                         <!--Bottom navigation part-->
                             <v-bottom-nav absolute  class="transparent">
@@ -87,37 +100,76 @@
 
 <script>
 import axios from 'axios'
+const serverURL = "https://simple-todo-crud.herokuapp.com/todos/";
 
 export default {
     name: 'app',
   data(){
       return {
+          filteredTodos: [],
+          todos: [],
+          addedTask: '',
+          editedTask: {},
+          editDialog:false,
           dialog: false,
-          todos: []
       }
   },
   created() {
-      axios.get('http://localhost:3000/todos')
-          .then(response => this.todos = response.data)
-          .catch(error => console.log(error));
+      axios.get(serverURL)
+        .then(response => this.todos = response.data)
+        .catch(error => console.log(error));
   },
   methods: {
       doneTask: function (todo) {
           let foundIndex = this.todos.findIndex(x => x._id == todo._id);
           this.todos[foundIndex].done = "true";
+          axios.put( serverURL + todo._id, {done: todo.done})
+              .then(response => console.log("Task DONE!"))
+              .catch(error => console.log(error));
       },
       editTask: function (todo) {
-
+        this.editedTask = todo;
+        this.editDialog = !this.editDialog;
+      },
+      updateTask: function (todo) {
+          let foundIndex = this.todos.findIndex(x => x._id == todo._id);
+          this.todos[foundIndex].todo = todo.todo;
+          this.editDialog = false;
+          axios.put( serverURL + todo._id, {todo: todo.todo})
+              .then(response => console.log("Task EDITED!"))
+              .catch(error => console.log(error));
       },
       deleteTask: function (todo) {
           let foundIndex = this.todos.findIndex(x => x._id == todo._id);
           this.todos.splice(foundIndex, 1);
+          axios.delete(serverURL + todo._id)
+              .then(response => {console.log("Task DELETED!")})
+              .catch(error => console.log(error));;
       },
       undoTask: function (todo) {
           let foundIndex = this.todos.findIndex(x => x._id == todo._id);
-          this.todos[foundIndex].done = "false";
+          this.todos[foundIndex].done = false;
+          axios.put( serverURL + todo._id, {done: todo.done})
+              .then(response => console.log("Task UNDONE!"))
+              .catch(error => console.log(error));
+      },
+      addTask: function (todo) {
+          this.dialog = false;
+          this.addedTask = '';
+          axios.post( serverURL , {todo: todo})
+              .then(response => {
+                  let todoItem = {
+                      todo: todo,
+                      done: false,
+                      _id: response.data._id,
+                  }
+                  this.todos.push(todoItem)
+              })
+              .catch(error => console.log(error));
+      },
+      dialogActions(){
+          this.dialog = !this.dialog;
       }
-
   }
 }
 </script>
