@@ -3,12 +3,12 @@
         <v-app>
             <v-layout row>
                 <v-flex xs12 sm12 md12 lg6 offset-lg3>
-                        <v-card>
+                        <v-card class="my-top-margin">
                         <!--Main toolbar-->
-                            <v-toolbar class="light-blue" extended light>
+                            <v-toolbar class="my-toolbar" extended light>
                             <v-toolbar-side-icon></v-toolbar-side-icon>
                               <v-btn
-                                class="cyan accent-2"
+                                class="my-plus"
                                 fab
                                 dark
                                 absolute
@@ -23,14 +23,14 @@
                         <!--Listing all todos-->
                             <v-list subheader>
                             <v-subheader>TODO items</v-subheader>
-                                <v-list-tile avatar v-for="todo in todos" :key="todo._id">
+                                <v-list-tile avatar v-for="todo in filterTodos" :key="todo._id">
                                   <v-list-tile-avatar>
                                     <i class="material-icons">work</i>
                                   </v-list-tile-avatar>
                                   <v-list-tile-content>
                                     <v-list-tile-title
                                             v-html="todo.todo"
-                                            :class="{ completed: todo.done == 'true' }">
+                                            :class="{ completed: todo.done == true }">
                                     </v-list-tile-title>
                                   </v-list-tile-content>
                                   <v-list-tile-action>
@@ -60,7 +60,7 @@
                             <v-dialog v-model="editDialog">
                               <v-card>
                                <v-card-text>
-                                   <v-text-field v-model="editedTask.todo" autofocus="" label="Edit task" @keyup.13="updateTask(editedTask)"></v-text-field>
+                                   <v-text-field v-model="editedTask.todo" label="Edit task" @keyup.13="updateTask(editedTask)"></v-text-field>
                                   <small class="grey--text">* This will be saved to DB as well.</small>
                                </v-card-text>
                                <v-card-actions>
@@ -71,17 +71,17 @@
                         </v-dialog>
                         <!--Bottom navigation part-->
                             <v-bottom-nav absolute  class="transparent">
-                          <v-btn flat class="teal--text" value="allTasks">
+                          <v-btn flat class="teal--text my-top-margin"  @click="status = 'all'" value="allTasks">
                             <span>All tasks</span>
-                            <v-icon>history</v-icon>
+                            <v-icon v-badge="{value: todos.length, right: true}">history</v-icon>
                           </v-btn>
-                          <v-btn flat class="teal--text" value="todoTasks">
+                          <v-btn flat class="teal--text my-top-margin" @click="status = false" value="todoTasks">
                             <span>Todo tasks</span>
-                            <i class="material-icons">work</i>
+                            <i icon v-badge="{value: todoTodos.length, right: true}" class="material-icons">work</i>
                           </v-btn>
-                          <v-btn flat class="teal--text" value="doneTasks">
+                          <v-btn flat class="teal--text my-top-margin" @click="status = true"  value="doneTasks">
                             <span>Done tasks</span>
-                            <i icon class="material-icons">done</i>
+                            <i icon v-badge="{value: doneTodos.length, right: true}" class="material-icons">done</i>
                           </v-btn>
                         </v-bottom-nav>
                         </v-card>
@@ -96,6 +96,12 @@
     .material-icons.my-green { color: #02530D !important; }
     .material-icons.my-red { color: #FF0000 !important; }
     .completed{text-decoration: line-through;}
+    .my-toolbar { background-color: #E8B30C !important; }
+    .my-plus { background-color: #02530D !important; }
+    /*.my-plus { background-color: #0C10E8 !important; }*/
+    /*.my-plus { background-color: darkslategray !important; }*/
+    .my-top-margin {margin-top: 5px !important;}
+    /*#app {background-color: darkslategray !important;}*/
 </style>
 
 <script>
@@ -112,6 +118,8 @@ export default {
           editedTask: {},
           editDialog:false,
           dialog: false,
+          status: false,
+          autofocusValue: true
       }
   },
   created() {
@@ -119,11 +127,26 @@ export default {
         .then(response => this.todos = response.data)
         .catch(error => console.log(error));
   },
+  computed:{
+    doneTodos: function () {
+        return this.todos.filter(todo => todo.done == true);
+    },
+    todoTodos: function () {
+        return this.todos.filter(todo => todo.done == false);
+    },
+    filterTodos: function () {
+      if(this.status == 'all'){
+        return this.todos;
+      }else{
+        return this.todos.filter(todo => todo.done == this.status);
+      }
+    }
+  },
   methods: {
       doneTask: function (todo) {
           let foundIndex = this.todos.findIndex(x => x._id == todo._id);
-          this.todos[foundIndex].done = "true";
-          axios.put( serverURL + todo._id, {done: todo.done})
+          this.todos[foundIndex].done = true;
+          axios.put( serverURL + todo._id, {done: true})
               .then(response => console.log("Task DONE!"))
               .catch(error => console.log(error));
       },
@@ -149,12 +172,11 @@ export default {
       undoTask: function (todo) {
           let foundIndex = this.todos.findIndex(x => x._id == todo._id);
           this.todos[foundIndex].done = false;
-          axios.put( serverURL + todo._id, {done: todo.done})
+          axios.put( serverURL + todo._id, {done: false})
               .then(response => console.log("Task UNDONE!"))
               .catch(error => console.log(error));
       },
       addTask: function (todo) {
-          this.dialog = false;
           this.addedTask = '';
           axios.post( serverURL , {todo: todo})
               .then(response => {
@@ -163,7 +185,8 @@ export default {
                       done: false,
                       _id: response.data._id,
                   }
-                  this.todos.push(todoItem)
+                  this.todos.push(todoItem);
+                  this.dialog = false;
               })
               .catch(error => console.log(error));
       },
