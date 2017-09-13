@@ -2,6 +2,13 @@
 
 > Todo App
 
+## Few notes:
+
+The server to this application is running on heroku. 
+
+The authentication is not yet done, so you can log in with any credentials. It
+is just the UI layer for now.
+
 ## Build Setup
 
 ``` bash
