@@ -5,7 +5,18 @@
                 <v-flex xs12 sm12 md12 lg6 offset-lg3>
                     <v-card class="my-top-margin">
                         <!--Main toolbar-->
-
+                        <v-toolbar class="my-toolbar" extended light>
+                                <v-btn v-if="authenticated" icon
+                                       @click="logout()" v-tooltip:bottom="{ html: 'Logout' }">
+                                    <v-icon>vpn_key</v-icon>
+                                </v-btn>
+                                <v-btn v-if="authenticated" class="my-plus" fab dark absolute bottom right
+                                       @click.native.stop="dialogActions()" v-tooltip:top="{ html: 'Add a task' }">
+                                    <v-icon>add</v-icon>
+                                </v-btn>
+                                <v-toolbar-title v-if="authenticated" slot="extension" class="white--text">My To-Do list</v-toolbar-title>
+                                <v-toolbar-title v-if="!authenticated" slot="extension" class="white--text">Please login</v-toolbar-title>
+                        </v-toolbar>
                         <div v-if="authenticated">
                             <!--Listing all todos-->
                             <v-list subheader>
