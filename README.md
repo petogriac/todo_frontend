@@ -1,6 +1,12 @@
 # todo_frontend
 
-> Todo App
+> To-Do App
+
+## Description
+
+A simple To-Do application. Where the you can add, edit and delete tasks. 
+You can also mark them as done, or undo that action. 
+On the bottom you can filter the tasks by status and see the counter for them as well.   
 
 ## Few notes:
 
@@ -21,5 +27,3 @@ npm run dev
 # build for production with minification
 npm run build
 ```
-
-For detailed explanation on how things work, consult the [docs for vue-loader](http://vuejs.github.io/vue-loader).
