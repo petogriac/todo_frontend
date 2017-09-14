@@ -4,7 +4,7 @@
 
 ## Description
 
-A simple To-Do application. Where the you can add, edit and delete tasks. 
+A simple To-Do application. Where you can add, edit and delete tasks. 
 You can also mark them as done, or undo that action. 
 On the bottom you can filter the tasks by status and see the counter for them as well.   
 

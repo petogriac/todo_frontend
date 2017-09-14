@@ -17,6 +17,7 @@
                                 <v-toolbar-title v-if="authenticated" slot="extension" class="white--text">My To-Do list</v-toolbar-title>
                                 <v-toolbar-title v-if="!authenticated" slot="extension" class="white--text">Please login</v-toolbar-title>
                         </v-toolbar>
+                        <!--Application when logged in-->
                         <div v-if="authenticated">
                             <!--Listing all todos-->
                             <v-list subheader>
@@ -88,8 +89,8 @@
                                 </v-btn>
                             </v-bottom-nav>
                         </div>
+                        <!--Login fields-->
                         <div v-if="!authenticated">
-                            <!--Login fields-->
                             <div class="my-all-margin">
                                 <v-form>
                                     <v-text-field
@@ -197,7 +198,7 @@ export default {
           this.todos.splice(foundIndex, 1);
           axios.delete(serverURL + todo._id)
               .then(() => {console.log("Task DELETED!")})
-              .catch(error => console.log(error));;
+              .catch(error => console.log(error));
         },
         undoTask: function (todo) {
           let foundIndex = this.todos.findIndex(x => x._id == todo._id);
